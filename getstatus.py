@@ -22,38 +22,39 @@ statuses = {}
 # Here we're going to populate the statuses variable.
 #
 # We need to look through each item in our directory,
-# only taking actual directories into consideration.
+# only taking into consideration directories that
+# contain the mcservice executable.
 for item in os.listdir(SCRIPT_DIR):
-    
-    # Get the path leading to this item.
-    fullpath = os.path.join(SCRIPT_DIR, item)
-    
-    # If this path happens to be a directory, then
-    # execute the "mcservice status" command in it.
-    if os.path.isdir(fullpath):
-        
+
+    # Get the path leading to mcservice.
+    mcservicecmd = os.path.join(SCRIPT_DIR, item, "mcservice")
+
+    # If this path happens to be a file, then assume
+    # that the file is executable.
+    if os.path.isfile(mcservicecmd):
+
         # Execute "mcservice status" and keep track of
         # the output for the corresponding version.
         try:
             statuses[item] = subprocess.check_output(
                 [
-                    os.path.join(fullpath, "mcservice"),
+                    mcservicecmd,
                     "status"
                 ]
             )
-            
+
         # Chances are that we're not going to get a nice,
         # neat error code of zero when we call this command,
         # so I am handling the exception here, grabbing the
         # output if necessary.
         except subprocess.CalledProcessError as ex:
             statuses[item] = ex.output
-            
+
 # Display the status for each Mirth Connect server
 # instance.  For neatness and readability, the versions
 # are sorted.
 for version in sorted(statuses.keys()):
     sys.stdout.write(version + ": " + statuses[version])
-    
+
 # This is also for neatness.
 sys.stdout.write("\n")

@@ -16,15 +16,12 @@ import subprocess
 # Connect that you wish to run.
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
-# The output of each "mcservice status" command.
-statuses = {}
-
 # Here we're going to populate the statuses variable.
 #
 # We need to look through each item in our directory,
 # only taking into consideration directories that
 # contain the mcservice executable.
-for item in os.listdir(SCRIPT_DIR):
+for item in sorted(os.listdir(SCRIPT_DIR)):
 
     # Get the path leading to mcservice.
     mcservicecmd = os.path.join(SCRIPT_DIR, item, "mcservice")
@@ -36,7 +33,8 @@ for item in os.listdir(SCRIPT_DIR):
         # Execute "mcservice status" and keep track of
         # the output for the corresponding version.
         try:
-            statuses[item] = subprocess.check_output(
+            exit_code = 0
+            mcservice_output = subprocess.check_output(
                 [
                     mcservicecmd,
                     "status"
@@ -48,13 +46,11 @@ for item in os.listdir(SCRIPT_DIR):
         # so I am handling the exception here, grabbing the
         # output if necessary.
         except subprocess.CalledProcessError as ex:
-            statuses[item] = ex.output
-
-# Display the status for each Mirth Connect server
-# instance.  For neatness and readability, the versions
-# are sorted.
-for version in sorted(statuses.keys()):
-    sys.stdout.write(version + ": " + statuses[version])
-
+            exit_code = ex.returncode
+            mcservice_output = ex.output
+            
+        s = "{0}: [{1}] {2}".format(item, exit_code, mcservice_output)
+        sys.stdout.write(s)
+        
 # This is also for neatness.
 sys.stdout.write("\n")
